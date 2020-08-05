@@ -150,14 +150,16 @@ def meta_generation(grid):
     
     return (y,x)
 
-def draw_agents(grid, lista):
+def draw_agents(grid, positions, destinations):
     """Print the maze, marking the current agent location."""
     #for j in range(len(lista)):
     """Print the maze, marking the current agent location."""
     for r in range(len(grid)):
         for c in range(len(grid[r])):
-            if (r, c) == lista[0] or (r, c) == lista[1]: # RISOLVERE STA COSA!!!!
+            if (r, c) == positions[0] or (r, c) == positions[1]: # RISOLVERE STA COSA!!!!
                 print('*', end=" ")
+            elif (r,c) == destinations[0] or (r,c) == destinations[1]:
+                print('O', end=" ")
             else:
                 print(grid[r][c], end=" ")
         print("")
@@ -221,13 +223,6 @@ def main():
         new_agent = Agent(start, dest, path, grid)
         list_of_agents.append(new_agent)
     print(len(list_of_agents))
-    #prova:
-    '''meta1 = meta_generation(grid)
-    list_of_agents[0].insert_dest(meta1) 
-    list_of_agents[0].bfs()
-    meta2 = meta_generation(grid)
-    list_of_agents[1].insert_dest(meta2) 
-    list_of_agents[1].bfs()'''
     
     print("inizio while")
     while True:
@@ -241,16 +236,18 @@ def main():
             if list_of_agents[i].__dest__() == (1,1) and meta != ():
                 list_of_agents[i].insert_dest(meta)
                 print("meta accettata")
-                list_of_agents[i].bfs()
+                list_of_agents[i].bfs()  #l'agente calcola immediatamente il suo percorso
                 time.sleep(1)
                 break   #solo uno accetta una certa meta
         
         
-        '''calcolo percorso agente'''
+        '''faccio muovere tutti gli agenti di un passo'''
         list_of_positions = []
+        list_of_destinations = []
         for i in range(len(list_of_agents)):
             list_of_positions.append(list_of_agents[i].next_position())  #salvo tutte le successive posizioni degli agenti
-        draw_agents(grid, list_of_positions)
+            list_of_destinations.append(list_of_agents[i].__dest__())
+        draw_agents(grid, list_of_positions, list_of_destinations)
         time.sleep(0.3)
         
         '''ora devo fare che la meta cambia sempre e viene presa da un agente
