@@ -141,11 +141,11 @@ class Agent(object):
 
 
 
-def meta_generation(grid, i, j):
+def meta_generation(grid):
     '''generate random positions until one is good'''
     while True:
-        x = random.randint(1,i) - 1
-        y = random.randint(1,j) - 1
+        x = random.randint(1,len(grid[0])) - 1
+        y = random.randint(1,len(grid)) - 1
         print("X: " +str(x)+ " Y: " + str(y))
         if grid[y][x] == ' ' and ( x!=1 or y!=1):  #la griglia è messa al contrario, l'inizio non è considerato valido
             break
@@ -170,7 +170,7 @@ def draw_agents(grid, positions, destinations):
 
 def main():
     '''The grid are created at the start of the program and it remains the same for the entire execution'''
-    grid = generate_maze(20, 20)
+    grid = generate_maze(30, 30)
     
     print("PROVE")
     '''start = (1,1)
@@ -208,7 +208,7 @@ def main():
         prob_meta = random.randint(1,5)    # 20% di probabilità di generare una nuova meta
         meta = ()
         if prob_meta == 1:
-            meta = meta_generation(grid, len(grid[0]), len(grid))
+            meta = meta_generation(grid)
         print(meta)
         '''cerco fra gli agenti uno che possa accettare la nuova meta'''
         for i in range(len(list_of_agents)):

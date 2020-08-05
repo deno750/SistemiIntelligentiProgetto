@@ -2,6 +2,8 @@ import random
 
 
 def generate_maze(rows, cols):
+    rows = int(rows / 2)
+    cols = int(cols / 2)
     edges = [] #Lista di archi
     for i in range(rows):
         for j in range(cols):
@@ -66,5 +68,5 @@ def find_parent(parent, cell):
     return cell
 
 #===============================TEST=======================================================
-#maze = generate_maze(15,15)
+#maze = generate_maze(25,25)
 #print_maze(maze)
