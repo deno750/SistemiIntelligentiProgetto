@@ -2,7 +2,6 @@ import random
 
 
 def generate_maze(rows, cols):
-    maze = [["X" for i in range(rows)] for i in range(cols)] #Labirinto vuoto
     edges = [] #Lista di archi
     for i in range(rows):
         for j in range(cols):
@@ -11,10 +10,7 @@ def generate_maze(rows, cols):
                 edges.append(neigh)
     random.shuffle(edges)
     #implementation randomized kruskhal algorithm
-    selected_cells = []
-    num_of_cells = rows * cols
     edges_to_draw = []
-    removed_edges = []
     parent = {}
     for i in range(rows):
         for j in range(cols):
@@ -28,14 +24,21 @@ def generate_maze(rows, cols):
         if cell1 != cell2:
             edges_to_draw.append(edge)
             parent[cell2] = cell1
-        else:
-            removed_edges.append(edge)
-
+    maze = [["X" for i in range(rows + rows - 1)] for i in range(cols + cols - 1)] #Labirinto vuoto
     for edge in edges_to_draw:
         cell1 = edge[0]
         cell2 = edge[1]
-        maze[cell1[0]][cell1[1]] = "*"
-        maze[cell2[0]][cell2[1]] = "*"
+        meanRow = (cell1[0] + cell2[0])
+        meanCol = cell1[1] + cell2[1]
+        maze[cell1[0] * 2][cell1[1] * 2] = " "
+        maze[cell2[0] * 2][cell2[1] * 2] = " "
+        maze[meanRow][meanCol] = " "
+    maze.insert(0, ["X" for i in range(cols + cols - 1)])
+    maze.insert(2*rows, ["X" for i in range(cols + cols - 1)])
+    for i in range(2*rows + 1):
+        maze[i].insert(0, "X")
+    for i in range(2*rows + 1):
+        maze[i].insert(2*cols, "X")
     return maze
 
 def print_maze(maze):
@@ -62,10 +65,6 @@ def find_parent(parent, cell):
         cell = parent[cell]
     return cell
 
-
-
-
-
 #===============================TEST=======================================================
-maze = generate_maze(3,3)
-print_maze(maze)
+#maze = generate_maze(15,15)
+#print_maze(maze)
