@@ -152,16 +152,17 @@ def meta_generation(grid):
 
 def draw_agents(grid, positions, destinations):
     """Print the maze, marking the current agent location."""
-    #for j in range(len(lista)):
-    """Print the maze, marking the current agent location."""
     for r in range(len(grid)):
         for c in range(len(grid[r])):
-            if (r, c) == positions[0] or (r, c) == positions[1]: # RISOLVERE STA COSA!!!!
-                print('*', end=" ")
-            elif (r,c) == destinations[0] or (r,c) == destinations[1]:
-                print('O', end=" ")
-            else:
-                print(grid[r][c], end=" ")
+            for j in range(len(positions)):
+                if (r, c) == positions[j]:
+                    print('*', end=" ")
+                    break
+                elif (r,c) == destinations[j]:
+                    print('O', end=" ")
+                    break
+                if j == len(positions)-1: #significa che sono arrivato in fine e non ho trovato agenti in quella posizione
+                    print(grid[r][c], end=" ")
         print("")
     print(" ")
 
@@ -214,7 +215,7 @@ def main():
     #print(agent2.__path__())'''
     
     '''creo lista di agenti'''
-    n = 2
+    n = int(input("enter number of agents: "))
     list_of_agents = []
     start = (1,1)
     dest = (1,1)
@@ -249,9 +250,6 @@ def main():
             list_of_destinations.append(list_of_agents[i].__dest__())
         draw_agents(grid, list_of_positions, list_of_destinations)
         time.sleep(0.3)
-        
-        '''ora devo fare che la meta cambia sempre e viene presa da un agente
-           solo dopo che ha raggiunto il precedente obbiettivo'''
     
 
 
