@@ -1,6 +1,5 @@
 import time
 import random
-from maze_generator import generate_maze
 
 
 class Maze(object):
@@ -144,14 +143,14 @@ class Agent(object):
 def meta_generation(grid):
     '''generate random positions until one is good'''
     while True:
-        x = random.randint(1,len(grid[0])) - 1
-        y = random.randint(1,len(grid)) - 1
-        print("X: " +str(x)+ " Y: " + str(y))
+        x = random.randint(1,21)
+        y = random.randint(1,23)
         if grid[y][x] == ' ' and ( x!=1 or y!=1):  #la griglia è messa al contrario, l'inizio non è considerato valido
             break
     
     return (y,x)
 
+'''metodo che visualizza le posizioni attuali degli agenti'''
 def draw_agents(grid, positions, destinations):
     """Print the maze, marking the current agent location."""
     for r in range(len(grid)):
@@ -168,29 +167,58 @@ def draw_agents(grid, positions, destinations):
         print("")
     print(" ")
 
+
+'''====================== METODO CHIAVE ======================='''
+
+'''metodo per gestire la scelta della successiva meta da parte degli agenti'''
+def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
+    if len(mete) == 0:    #soprattutto alle prime iterazioni può essere vuota
+        return agents
+    next_meta = mete[0]
+    for i in range(len(agents)):
+            #if agents[i].__dest__() == (1,1) and next_meta != (): versione precedente
+            if agents[i].__dest__() == (1,1):
+                agents[i].insert_dest(next_meta)
+                mete.pop(0)
+                print("accettata:", end=" ")
+                print(next_meta)
+                
+                agents[i].bfs()  #l'agente prescelto calcola immediatamente il suo percorso
+                time.sleep(1)
+                break   #solo uno accetta una certa meta
+    
+    return agents
+
+'''============================================================'''
+
 def main():
     '''The grid are created at the start of the program and it remains the same for the entire execution'''
-    grid = generate_maze(30, 30)
+    grid = ["XXXXXXXXXXXXXXXXXXXXXXX",  #dimensioni: (23,21)
+            "X     XX              X",
+            "X XXXXXX XXXX XXXX XXXX",
+            "X XXXXXX XXXX XXXX XXXX",
+            "X        XX     XX    X",
+            "X XXXX XXXXXXXX XX XX X",
+            "X XXXX XXXXXXXX XX XX X",
+            "X XX   XX             X",
+            "X XXXX XXXX XX XX XXX X",
+            "X XXXX XXXX XX XX XXX X",
+            "X XXXX   XX XX XX     X",
+            "X    XXX          XXXXX",
+            "X    XXX XXXXXXXX XXXXX",
+            "X XXX    XXXXXXXX     X",
+            "X    XXX XX XX    XXXXX",
+            "XXXX XXX XX XX XXXXXXXX",
+            "X     XX XX XX XXX    X",
+            "XXXXX    XX XX XX  XXXX",
+            "XXXXX XX XX    XX  XXXX",
+            "X     XX XXXX XXX     X",
+            "X XX     XX   XXX   XXX",
+            "X XX XXXXXX XX XXXX XXX",
+            "X XX XXXXXX XX XXXX   X",
+            "X XX                XXX",
+            "XXXXXXXXXXXXXXXXXXXXXXX"]
     
-    print("PROVE")
-    '''start = (1,1)
-    dest = (1,1)
-    path = []
-    agent1 = Agent(start, dest, path, grid)
-    agent2 = Agent(start, dest, path, grid)
-    
-    print("prima tappa")
-    meta1 = meta_generation(grid)  #creo nuova destinazione
-    print(meta1)
-    agent1.insert_dest(meta1)      #la passo all'agente
-    agent1.bfs()                  #perché possa calcolare il percorso
-    #print(agent1.__path__())
-    
-    meta2 = meta_generation(grid)  #creo nuova destinazione
-    print(meta2)
-    agent2.insert_dest(meta2)      #la passo all'agente
-    agent2.bfs()                  #perché possa calcolare il percorso
-    #print(agent2.__path__())'''
     
     '''creo lista di agenti'''
     n = int(input("enter number of agents: "))
@@ -203,21 +231,20 @@ def main():
         list_of_agents.append(new_agent)
     print(len(list_of_agents))
     
-    print("inizio while")
+    '''LOOP INFINITO'''
+    meta_queue = []
     while True:
-        prob_meta = random.randint(1,5)    # 20% di probabilità di generare una nuova meta
+        prob_meta = random.randint(1,10)    # 10% di probabilità di generare una nuova meta
         meta = ()
         if prob_meta == 1:
             meta = meta_generation(grid)
+            meta_queue.append(meta)
+        print(meta_queue)
+        print("generata:", end=" ")
         print(meta)
+        
         '''cerco fra gli agenti uno che possa accettare la nuova meta'''
-        for i in range(len(list_of_agents)):
-            if list_of_agents[i].__dest__() == (1,1) and meta != ():
-                list_of_agents[i].insert_dest(meta)
-                print("meta accettata")
-                list_of_agents[i].bfs()  #l'agente calcola immediatamente il suo percorso
-                time.sleep(1)
-                break   #solo uno accetta una certa meta
+        list_of_agents = choose_new_meta(list_of_agents, meta_queue)
         
         
         '''faccio muovere tutti gli agenti di un passo'''
@@ -227,7 +254,8 @@ def main():
             list_of_positions.append(list_of_agents[i].next_position())  #salvo tutte le successive posizioni degli agenti
             list_of_destinations.append(list_of_agents[i].__dest__())
         draw_agents(grid, list_of_positions, list_of_destinations)
-        time.sleep(0.5)
+        time.sleep(0.3)
+    
 
 
 
