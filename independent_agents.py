@@ -1,5 +1,6 @@
 import time
 import random
+import maze_generator as mg
 
 
 class Maze(object):
@@ -58,11 +59,12 @@ class Maze(object):
 
 
 class Agent(object):
-    def __init__(self, position, destination, path, grid):
+    def __init__(self, position, destination, path, grid, capacity):
         self.position = position
         self.destination = destination
         self.path = path
         self.grid = grid
+        self.capacity = capacity
         
     def __pos__(self):
         return self.position
@@ -70,9 +72,13 @@ class Agent(object):
         return self.destination
     def __path__(self):
         return self.path
+    def __cap__(self):
+        return self.capacity
     def insert_dest(self, dest):
         self.destination = dest
         self.path = [] #resetto il path quando accetto una nuova destinazione
+    def up_cap(self, cap):
+        self.capacity = cap
     
     '''method that perform breadth search to find a path from actual position to destination'''
     def bfs(self):
@@ -123,12 +129,17 @@ class Agent(object):
     
     '''this method return the next position of the agent in it's path'''
     def next_position(self):
-        if self.position == (1,1) and self.destination == (1,1): #così quando raggiunge la fine non sparisce ma resta fermo
-            return self.position
+        #if self.position == (1,1) and self.destination == (1,1): #così quando raggiunge la fine non sparisce ma resta fermo
+         #   return self.position
         if self.position == self.destination: #così quando raggiunge la destinazione torna indietro
-            '''qui dovrei ricalcolare il percorso per tornare a casa'''
-            self.destination = (1,1)
-            self.bfs()
+            '''se arriva a casa si svuota e ripristina la capacità'''
+            if self.destination == (1,1):
+                self.capacity = 100
+            else:
+                self.capacity = self.capacity - 20
+                '''qui dovrei ricalcolare il percorso per tornare a casa'''
+                self.destination = (1,1)
+                self.bfs()
             return self.position
         for i in range(len(self.path)-1):     #cerco posizione attuale nel path
             if self.path[i] == self.position:
@@ -166,7 +177,7 @@ def draw_agents(grid, positions, destinations):
                     print(grid[r][c], end=" ")
         print("")
     print(" ")
-
+    
 
 '''====================== METODO CHIAVE ======================='''
 
@@ -177,7 +188,7 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
     next_meta = mete[0]
     for i in range(len(agents)):
             #if agents[i].__dest__() == (1,1) and next_meta != (): versione precedente
-            if agents[i].__dest__() == (1,1):
+            if agents[i].__dest__() == (1,1) and agents[i].__cap__() > 0:
                 agents[i].insert_dest(next_meta)
                 mete.pop(0)
                 print("accettata:", end=" ")
@@ -193,7 +204,8 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
 
 def main():
     '''The grid are created at the start of the program and it remains the same for the entire execution'''
-    grid = ["XXXXXXXXXXXXXXXXXXXXXXX",  #dimensioni: (23,21)
+    grid = mg.generate_maze(25,25)
+    '''grid = ["XXXXXXXXXXXXXXXXXXXXXXX",  #dimensioni: (23,21)
             "X     XX              X",
             "X XXXXXX XXXX XXXX XXXX",
             "X XXXXXX XXXX XXXX XXXX",
@@ -217,7 +229,7 @@ def main():
             "X XX XXXXXX XX XXXX XXX",
             "X XX XXXXXX XX XXXX   X",
             "X XX                XXX",
-            "XXXXXXXXXXXXXXXXXXXXXXX"]
+            "XXXXXXXXXXXXXXXXXXXXXXX"]'''
     
     
     '''creo lista di agenti'''
@@ -227,7 +239,7 @@ def main():
     dest = (1,1)
     path = []
     for i in range(n):
-        new_agent = Agent(start, dest, path, grid)
+        new_agent = Agent(start, dest, path, grid, 100)
         list_of_agents.append(new_agent)
     print(len(list_of_agents))
     
@@ -246,13 +258,14 @@ def main():
         '''cerco fra gli agenti uno che possa accettare la nuova meta'''
         list_of_agents = choose_new_meta(list_of_agents, meta_queue)
         
-        
+        print("capacities:")
         '''faccio muovere tutti gli agenti di un passo'''
         list_of_positions = []
         list_of_destinations = []
         for i in range(len(list_of_agents)):
             list_of_positions.append(list_of_agents[i].next_position())  #salvo tutte le successive posizioni degli agenti
             list_of_destinations.append(list_of_agents[i].__dest__())
+            print(list_of_agents[i].__cap__())
         draw_agents(grid, list_of_positions, list_of_destinations)
         time.sleep(0.3)
     
