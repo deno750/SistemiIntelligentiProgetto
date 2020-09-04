@@ -1,6 +1,7 @@
 import time
 import random
 import maze_generator as mg
+import sys
 
 
 class Maze(object):
@@ -65,6 +66,8 @@ class Agent(object):
         self.path = path
         self.grid = grid
         self.capacity = capacity
+        self.preferences_list = []
+        self.my_pref = [0,0]  #primo elemento contiene preferenza, secondo contiene meta
         
     def __pos__(self):
         return self.position
@@ -129,8 +132,6 @@ class Agent(object):
     
     '''this method return the next position of the agent in it's path'''
     def next_position(self):
-        #if self.position == (1,1) and self.destination == (1,1): #così quando raggiunge la fine non sparisce ma resta fermo
-         #   return self.position
         if self.position == self.destination: #così quando raggiunge la destinazione torna indietro
             '''se arriva a casa si svuota e ripristina la capacità'''
             if self.destination == (1,1):
@@ -147,8 +148,39 @@ class Agent(object):
                 next_pos = self.path[i+1]
                 self.position = next_pos
                 return next_pos
+        
+    '''metodo con il quale l'agente esprime il proprio grado di preferenza per raggiungere un certo punto'''
+    def express_preference(self, meta):
+        #regole: preferenza nulla se il carico è al completo e se sta già raggiungendo una meta
+        if self.capacity > 0 and self.destination == (1,1):
+            self.my_pref[0] = random.randint(1, 100) #bisogna inserire una regola di scelta
+        else:
+            self.my_pref[0] = 0
+        self.my_pref[1] = meta
+        return self.my_pref 
     
-
+    '''metodo che aggiorna la lista preferenze aggiungendo quelle dei compagni'''
+    def receive(self, pref):
+        self.preferences_list.append(pref)
+        self.preferences_list.sort()
+        self.preferences_list.reverse()  #la inverto solo per comodità
+        
+    '''metodo per decidere se aggiornare la propria meta'''
+    def update_meta(self):
+        print("mia e massimo  ", self.my_pref[0], " ", self.preferences_list[0])
+        check = False
+        if self.my_pref[0] > 0 and self.my_pref[0] >= self.preferences_list[0]:
+            self.destination = self.my_pref[1]
+            print("accettata")
+            check = True
+            self.bfs()
+        '''invia un segnale di conferma, cosicché gli altri agenti sappiano che questo 
+           ha deciso di prendere a carico la meta'''
+        return check
+    
+    '''metodo per il ripristino della lista preferenze, verrà eseguito quando viene raggiunto un accordo'''
+    def reset(self):
+        self.preferences_list = []
 
 
 def meta_generation(grid):
@@ -181,13 +213,13 @@ def draw_agents(grid, positions, destinations):
 
 '''====================== METODO CHIAVE ======================='''
 
-'''metodo per gestire la scelta della successiva meta da parte degli agenti'''
+'''metodo per gestire le comunicazioni fra gli agenti affinché decidano chi mandare alla meta successiva'''
 def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
     if len(mete) == 0:    #soprattutto alle prime iterazioni può essere vuota
         return agents
     next_meta = mete[0]
-    for i in range(len(agents)):
-            #if agents[i].__dest__() == (1,1) and next_meta != (): versione precedente
+    #QUELLO CHE FACEVA PRIMA
+    '''for i in range(len(agents)):
             if agents[i].__dest__() == (1,1) and agents[i].__cap__() > 0:
                 agents[i].insert_dest(next_meta)
                 mete.pop(0)
@@ -196,11 +228,42 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
                 
                 agents[i].bfs()  #l'agente prescelto calcola immediatamente il suo percorso
                 time.sleep(1)
-                break   #solo uno accetta una certa meta
+                break   #solo uno accetta una certa meta'''
     
+    #QUELLO CHE FA ORA
+    '''ogni agente esprime un grado di preferenza pr la meta in questione e lo comunica agli altri'''
+    print("preferences")
+    for i in range(len(agents)):
+        pref = agents[i].express_preference(next_meta)
+        print(pref)
+        for j in range(len(agents)):
+            if j != i:   #devo evitare di inviare la preferenza all'agente stesso
+                agents[j].receive(pref[0])
+    '''terminate le comunicazioni delle preferenze, gli agenti valutano se modificare la propria meta'''
+    for i in range(len(agents)):
+        confirmed = agents[i].update_meta()
+        if confirmed:
+            mete.pop(0)
+            #time.sleep(1)
+            pause()
+            '''comunico a tutti di resettare le proprie liste perché la scelta è stata fatta'''
+            for j in range(len(agents)):
+                agents[j].reset()
+            break   #interrompere il ciclo è come comunicare che la scelta è già stata fatta (?)
     return agents
 
 '''============================================================'''
+
+#supporto, solo per visualizzare il funzionamento lentamente
+def pause():
+    while True:
+        n = str(input("press e to exit: "))
+        if n == "e":
+            sys.exit()
+        else:
+            break
+    
+    time.sleep(1)
 
 def main():
     '''The grid are created at the start of the program and it remains the same for the entire execution'''
@@ -258,7 +321,7 @@ def main():
         '''cerco fra gli agenti uno che possa accettare la nuova meta'''
         list_of_agents = choose_new_meta(list_of_agents, meta_queue)
         
-        print("capacities:")
+        print("agent's capacities:")
         '''faccio muovere tutti gli agenti di un passo'''
         list_of_positions = []
         list_of_destinations = []
