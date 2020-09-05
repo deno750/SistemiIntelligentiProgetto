@@ -7,6 +7,7 @@ import sys
 
 AGENTS_COLOR = '\033[91m'
 METE_COLOR = '\033[34m'
+LANDFILL_COLOR = '\033[92m'
 CEND = '\033[0m'
 
 def meta_generation(coordinates):
@@ -19,7 +20,10 @@ def draw_agents(grid, positions, destinations):
     for r in range(len(grid)):
         for c in range(len(grid[r])):
             for j in range(len(positions)):
-                if (r, c) == positions[j]:
+                if (r, c) == (1, 1): #Draws the LandFill position
+                    print(LANDFILL_COLOR + 'T' + CEND, end= " ")
+                    break
+                elif (r, c) == positions[j]:
                     print(AGENTS_COLOR + '*' + CEND, end=" ")
                     break
                 elif (r,c) == destinations[j]:
