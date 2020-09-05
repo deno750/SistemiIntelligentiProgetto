@@ -5,8 +5,11 @@ from maze import Maze
 from agent import Agent
 import sys
 
+AGENTS_COLOR = '\033[91m'
+METE_COLOR = '\033[34m'
+CEND = '\033[0m'
+
 def meta_generation(coordinates):
-    '''generate random positions until one is good'''
     index = random.randint(1, len(coordinates))
     return coordinates[index]
 
@@ -17,10 +20,10 @@ def draw_agents(grid, positions, destinations):
         for c in range(len(grid[r])):
             for j in range(len(positions)):
                 if (r, c) == positions[j]:
-                    print('*', end=" ")
+                    print(AGENTS_COLOR + '*' + CEND, end=" ")
                     break
                 elif (r,c) == destinations[j]:
-                    print('O', end=" ")
+                    print(METE_COLOR + 'O' + CEND, end=" ")
                     break
                 if j == len(positions)-1: #significa che sono arrivato in fine e non ho trovato agenti in quella posizione
                     print(grid[r][c], end=" ")
@@ -95,10 +98,13 @@ def main():
     '''creo lista di agenti'''
     n = int(input("enter number of agents: "))
     list_of_agents = []
-    start = (1,1)
-    dest = (1,1)
+    #start = coordinates[random.randint(1, len(coordinates))]
+    #start = (1,1)
+    #dest = (1,1)
     path = []
     for i in range(n):
+        start = coordinates[random.randint(1, len(coordinates))]
+        dest = start
         new_agent = Agent(start, dest, path, grid, 100)
         list_of_agents.append(new_agent)
     print(len(list_of_agents))
