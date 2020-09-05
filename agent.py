@@ -10,6 +10,8 @@ class Agent(object):
         self.capacity = capacity
         self.preferences_list = []
         self.my_pref = [0,0]  #primo elemento contiene preferenza, secondo contiene meta
+        self.provis_dest = (0,0)  #le provvisorie per quando valuta le mete
+        self.provis_path = []
         
     def __pos__(self):
         return self.position
@@ -29,7 +31,11 @@ class Agent(object):
     def bfs(self):
         #potrei anche dichiarare qui il maze e il goal
         maze = Maze(self.grid, self.position)
-        goal = Maze(self.grid, self.destination)
+        if self.provis_dest != (0,0):
+            goal = Maze(self.grid, self.provis_dest)
+        else:
+            goal = Maze(self.grid, self.destination)
+        
         
         frontiera = []
         visitati = []
@@ -70,7 +76,11 @@ class Agent(object):
         new_path.reverse()
         new_path.append(goal.location)
         
-        self.path = new_path
+        if self.provis_dest != (0,0):
+            self.provis_path = new_path
+        else:
+            self.path = new_path
+        
     
     '''this method return the next position of the agent in it's path'''
     def next_position(self):
@@ -95,7 +105,11 @@ class Agent(object):
     def express_preference(self, meta):
         #regole: preferenza nulla se il carico è al completo e se sta già raggiungendo una meta
         if self.capacity > 0 and self.destination == (1,1):
-            self.my_pref[0] = random.randint(1, 100) #bisogna inserire una regola di scelta
+            #self.my_pref[0] = random.randint(1, 100) #bisogna inserire una regola di scelta
+            self.provis_dest = meta
+            self.bfs()
+            dist = len(self.provis_path)
+            self.my_pref[0] = round((1/dist) * 100, 3)
         else:
             self.my_pref[0] = 0
         self.my_pref[1] = meta
@@ -109,13 +123,14 @@ class Agent(object):
         
     '''metodo per decidere se aggiornare la propria meta'''
     def update_meta(self):
-        print("mia e massimo  ", self.my_pref[0], " ", self.preferences_list[0])
+        #print("mia e massimo  ", self.my_pref[0], " ", self.preferences_list[0])
         check = False
         if self.my_pref[0] > 0 and self.my_pref[0] >= self.preferences_list[0]:
             self.destination = self.my_pref[1]
-            print("accettata")
+            #print("accettata")
             check = True
-            self.bfs()
+            #self.bfs()
+            self.path = self.provis_path
         '''invia un segnale di conferma, cosicché gli altri agenti sappiano che questo 
            ha deciso di prendere a carico la meta'''
         return check
@@ -123,3 +138,5 @@ class Agent(object):
     '''metodo per il ripristino della lista preferenze, verrà eseguito quando viene raggiunto un accordo'''
     def reset(self):
         self.preferences_list = []
+        self.provis_dest = (0,0)
+        self.provis_path = []
