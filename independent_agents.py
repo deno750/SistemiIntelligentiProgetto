@@ -5,6 +5,8 @@ from maze import Maze
 from agent import Agent
 import sys
 
+test_mod = False
+sistem_mod = 3  # admissible values: 1, 2 and 3
 AGENTS_COLOR = '\033[91m'
 METE_COLOR = '\033[34m'
 LANDFILL_COLOR = '\033[92m'
@@ -27,7 +29,8 @@ def draw_agents(grid, positions, destinations):
                     print(AGENTS_COLOR + '*' + CEND, end=" ")
                     break
                 elif (r,c) == destinations[j]:
-                    print(METE_COLOR + 'O' + CEND, end=" ")
+                    #print(METE_COLOR + 'O' + CEND, end=" ")
+                    print('0', end=" ")
                     break
                 if j == len(positions)-1: #significa che sono arrivato in fine e non ho trovato agenti in quella posizione
                     print(grid[r][c], end=" ")
@@ -42,38 +45,64 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
     if len(mete) == 0:    #soprattutto alle prime iterazioni può essere vuota
         return agents
     next_meta = mete[0]
-    #QUELLO CHE FACEVA PRIMA
-    '''for i in range(len(agents)):
+    
+    '''three different organzation sistems'''
+    if sistem_mod == 1:
+        # This is used to show how bad perform a sistem unless the control of agents
+        for i in range(len(agents)):
+            if agents[i].__pos__() == (1,1):
+                agents[i].insert_dest(next_meta)
+                mete.pop(0)
+                print("accettata:", end=" ")
+                print(next_meta)
+                
+                path = agents[i].bfs(agents[i].__pos__(), agents[i].__dest__())  #l'agente prescelto calcola immediatamente il suo percorso
+                agents[i].path = path
+                time.sleep(1)
+                break   #solo uno accetta una certa meta
+    elif sistem_mod == 2:
+        # This is a basic control: always the first free agent keeps the new meta
+        for i in range(len(agents)):
             if agents[i].__dest__() == (1,1) and agents[i].__cap__() > 0:
                 agents[i].insert_dest(next_meta)
                 mete.pop(0)
                 print("accettata:", end=" ")
                 print(next_meta)
                 
-                agents[i].bfs()  #l'agente prescelto calcola immediatamente il suo percorso
+                path = agents[i].bfs(agents[i].__pos__(), agents[i].__dest__())  #l'agente prescelto calcola immediatamente il suo percorso
+                agents[i].path = path
                 time.sleep(1)
-                break   #solo uno accetta una certa meta'''
-    
-    #QUELLO CHE FA ORA
-    '''ogni agente esprime un grado di preferenza pr la meta in questione e lo comunica agli altri'''
-    print("preferences")
-    for i in range(len(agents)):
-        pref = agents[i].express_preference(next_meta)
-        print(pref)
-        for j in range(len(agents)):
-            if j != i:   #devo evitare di inviare la preferenza all'agente stesso
-                agents[j].receive(pref[0])
-    '''terminate le comunicazioni delle preferenze, gli agenti valutano se modificare la propria meta'''
-    for i in range(len(agents)):
-        confirmed = agents[i].update_meta()
-        if confirmed:
-            mete.pop(0)
-            #time.sleep(1)
-            #pause()
-            '''comunico a tutti di resettare le proprie liste perché la scelta è stata fatta'''
+                break
+    else:
+        # The agents speak to each other in orther to decide which of them keep the new meta
+        '''ogni agente esprime un grado di preferenza pr la meta in questione e lo comunica agli altri'''
+        if test_mod:
+            print("preferences")
+
+        for i in range(len(agents)):
+            pref = agents[i].express_preference(next_meta)
+            if test_mod:
+                print(pref)
             for j in range(len(agents)):
-                agents[j].reset()
-            break   #interrompere il ciclo è come comunicare che la scelta è già stata fatta (?)
+                if j != i:   #devo evitare di inviare la preferenza all'agente stesso
+                    agents[j].receive(pref[0])
+        '''terminate le comunicazioni delle preferenze, gli agenti valutano se modificare la propria meta'''
+        for i in range(len(agents)):
+            confirmed = agents[i].update_meta()
+            if confirmed:
+                mete.pop(0)
+                if test_mod:
+                    pause()
+                #else:
+                    #time.sleep(1)
+                print("accepted by: ", i+1)
+                
+                '''comunico a tutti di resettare le proprie liste perché la scelta è stata fatta'''
+                for j in range(len(agents)):
+                    agents[j].reset()
+                break   #interrompere il ciclo è come comunicare che la scelta è già stata fatta (?)
+    
+    
     return agents
 
 '''============================================================'''
