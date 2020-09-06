@@ -116,7 +116,7 @@ def main():
     '''LOOP INFINITO'''
     meta_queue = []
     while True:
-        prob_meta = random.randint(1,10)    # 10% di probabilità di generare una nuova meta
+        prob_meta = random.randint(1,5)    # 10% di probabilità di generare una nuova meta
         meta = ()
         if prob_meta == 1:
             meta = meta_generation(coordinates)

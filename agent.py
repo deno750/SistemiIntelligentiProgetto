@@ -1,8 +1,10 @@
 import random
+import math
 from maze import Maze
 
 class Agent(object):
-    def __init__(self, position, destination, path, grid, capacity):
+    def __init__(self, name, position, destination, path, grid, capacity):
+        self.name = name
         self.position = position
         self.destination = destination
         self.path = path
@@ -12,6 +14,9 @@ class Agent(object):
         self.my_pref = [0,0]  #primo elemento contiene preferenza, secondo contiene meta
         self.provis_dest = (0,0)  #le provvisorie per quando valuta le mete
         self.provis_path = []
+        self.trashPreferences = {}
+        self.colleaguesTrashPreferences = {}
+        self.trashPath = {}
         
     def __pos__(self):
         return self.position
@@ -26,16 +31,12 @@ class Agent(object):
         self.path = [] #resetto il path quando accetto una nuova destinazione
     def up_cap(self, cap):
         self.capacity = cap
-    
+
     '''method that perform breadth search to find a path from actual position to destination'''
-    def bfs(self):
+    def bfs(self, destination):
         #potrei anche dichiarare qui il maze e il goal
         maze = Maze(self.grid, self.position)
-        if self.provis_dest != (0,0):
-            goal = Maze(self.grid, self.provis_dest)
-        else:
-            goal = Maze(self.grid, self.destination)
-        
+        goal = Maze(self.grid, destination)
         
         frontiera = []
         visitati = []
@@ -76,67 +77,72 @@ class Agent(object):
         new_path.reverse()
         new_path.append(goal.location)
         
-        if self.provis_dest != (0,0):
-            self.provis_path = new_path
-        else:
-            self.path = new_path
+        return new_path
+        #if self.provis_dest != (0,0):
+            #self.provis_path = new_path
+        #else:
+            #self.path = new_path
         
     
     '''this method return the next position of the agent in it's path'''
     def next_position(self):
-        if self.position == self.destination: #così quando raggiunge la destinazione torna indietro
-            '''se arriva a casa si svuota e ripristina la capacità'''
-            if self.destination == (1,1):
-                self.capacity = 100
-            else:
-                self.capacity = self.capacity - 20
-                '''qui dovrei ricalcolare il percorso per tornare a casa'''
-                self.destination = (1,1)
-                self.bfs()
+        if len(self.path) == 0:
             return self.position
-        for i in range(len(self.path)-1):     #cerco posizione attuale nel path
-            if self.path[i] == self.position:
-                #update actual position
-                next_pos = self.path[i+1]
-                self.position = next_pos
-                return next_pos
-        
-    '''metodo con il quale l'agente esprime il proprio grado di preferenza per raggiungere un certo punto'''
-    def express_preference(self, meta):
-        #regole: preferenza nulla se il carico è al completo e se sta già raggiungendo una meta
-        if self.capacity > 0 and self.destination == (1,1):
-            #self.my_pref[0] = random.randint(1, 100) #bisogna inserire una regola di scelta
-            self.provis_dest = meta
-            self.bfs()
-            dist = len(self.provis_path)
-            self.my_pref[0] = round((1/dist) * 100, 3)
-        else:
-            self.my_pref[0] = 0
-        self.my_pref[1] = meta
-        return self.my_pref 
+        position = self.path.pop(0)
+        self.position = position
+        return position
+
+    def __calculate_preference(self, trash):
+        path = self.bfs(trash.coordinates)
+        distance = len(path)
+        self.trashPath[trash] = path
+        if distance == 0 or self.capacity == 0: 
+            return -1
+        preference = 1 / distance * 100 + (self.capacity - trash.quantity)
+        return preference
+
+    def trash_observer(self, trash):
+        print(self.name + " received new trash location")
+        preference = self.__calculate_preference(trash)
+        self.trashPreferences[trash] = preference #choose good preference
+        print(self.name + " has preference of " + str(preference))
+        print(self.name + " has preferences: " + str(self.trashPreferences))
+        self.colleaguesTrashPreferences[trash] = []
+
+    #The agent receives a notification that the trash is picked, so it can remove this trash from it's queue
+    def trash_picked_observer(self, trash):
+        #remove the trash from agent's queue
+        del self.trashPreferences[trash]
+        del self.colleaguesTrashPreferences[trash]
+        del self.trashPath[trash]
     
-    '''metodo che aggiorna la lista preferenze aggiungendo quelle dei compagni'''
-    def receive(self, pref):
-        self.preferences_list.append(pref)
-        self.preferences_list.sort()
-        self.preferences_list.reverse()  #la inverto solo per comodità
-        
-    '''metodo per decidere se aggiornare la propria meta'''
-    def update_meta(self):
-        #print("mia e massimo  ", self.my_pref[0], " ", self.preferences_list[0])
-        check = False
-        if self.my_pref[0] > 0 and self.my_pref[0] >= self.preferences_list[0]:
-            self.destination = self.my_pref[1]
-            #print("accettata")
-            check = True
-            #self.bfs()
-            self.path = self.provis_path
-        '''invia un segnale di conferma, cosicché gli altri agenti sappiano che questo 
-           ha deciso di prendere a carico la meta'''
-        return check
+    #Notifies other agents that the trash is picked so they can remove the trash from their queue
+    def trash_picked_notifier(self, trash, agents):
+        #removes the trash from it's queue
+        del self.trashPreferences[trash]
+        del self.colleaguesTrashPreferences[trash]
+        del self.trashPath[trash]
+        #notifies other agents that the trash is picked
+        for agent in agents:
+            if agent == self:
+                continue
+            agent.trash_picked_observer(trash)
+
+    def receive_colleagues_preferences(self, trash, pref):
+        self.colleaguesTrashPreferences[trash].append(pref)
     
-    '''metodo per il ripristino della lista preferenze, verrà eseguito quando viene raggiunto un accordo'''
-    def reset(self):
-        self.preferences_list = []
-        self.provis_dest = (0,0)
-        self.provis_path = []
+    def calculate_new_route(self, trash):
+        agent_pref = self.trashPreferences[trash]
+        colleagues_pref = max(self.colleaguesTrashPreferences[trash])
+        if agent_pref > colleagues_pref:
+            self.destination = trash.coordinates
+            self.path = self.trashPath[trash]
+            print(self.name + " is going to take trash at " + str(trash.coordinates))
+
+    def check_position_and_notify(self, agents):
+        if self.position == self.destination:
+            for trash, v in self.trashPreferences.items():
+                if trash.coordinates == self.position:
+                    self.trash_picked_notifier(trash, agents)
+                    break
+
