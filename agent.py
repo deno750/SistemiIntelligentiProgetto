@@ -29,60 +29,6 @@ class Agent(object):
         self.capacity = cap
     
     '''method that perform breadth search to find a path from actual position to destination'''
-    '''def bfs(self):
-        #potrei anche dichiarare qui il maze e il goal
-        maze = Maze(self.grid, self.position)
-        if self.provis_dest != (0,0):
-            goal = Maze(self.grid, self.provis_dest)
-        else:
-            goal = Maze(self.grid, self.destination)
-        
-        
-        frontiera = []
-        visitati = []
-        percorso = {}
-        #metto l'inizio nella frontiera
-        frontiera.append(maze.location)
-        while frontiera: #cioè finché non è vuota
-            elem = frontiera.pop(0) #rimuovo il primo elemento
-            parent = Maze(maze.grid, elem)
-            visitati.append(parent.location)
-            
-            child = parent.moves()
-            rimuovere = False
-            for c in child:
-                for visit in visitati: #verifico che questo elemento non sia già stato visitato
-                    if c == visit:
-                        rimuovere = True
-                if not rimuovere:
-                    frontiera.append(c) #se non è già stato visitato lo aggiungo alla frontiera
-                    percorso[c] = elem #aggiungo il figlio con il suo genitore al dizionario
-                else:
-                    rimuovere = False
-            #if c==(19,18): #se voglio andare in qualunque direzione non possono esserci uscite
-             #   frontiera = []
-        
-        new_path = []
-        primo = visitati[0]
-        figlio = goal.location
-        #partendo dalla fine recupero i genitori inserendoli nel new_path
-        genitore = percorso[figlio]
-        while True:
-            new_path.append(genitore)
-            if genitore == primo:
-                break #se arrivo al punto d?origine interrompo
-            figlio = genitore
-            genitore = percorso[figlio]
-        
-        new_path.reverse()
-        new_path.append(goal.location)
-        
-        if self.provis_dest != (0,0):
-            self.provis_path = new_path
-        else:
-            self.path = new_path'''
-       
-    '''==================BFS TEST=================================='''
     def bfs(self, start, stop):
         #potrei anche dichiarare qui il maze e il goal
         maze = Maze(self.grid, start)
@@ -111,8 +57,6 @@ class Agent(object):
                     percorso[c] = elem #aggiungo il figlio con il suo genitore al dizionario
                 else:
                     rimuovere = False
-            #if c==(19,18): #se voglio andare in qualunque direzione non possono esserci uscite
-             #   frontiera = []
         
         new_path = []
         primo = visitati[0]
@@ -158,15 +102,6 @@ class Agent(object):
     def express_preference(self, meta):
         #regole: preferenza nulla se il carico è al completo
         
-        '''
-        if self.capacity > 0 and self.destination == (1,1):
-            #self.my_pref[0] = random.randint(1, 100) #bisogna inserire una regola di scelta
-            self.provis_dest = meta
-            self.bfs()
-            dist = len(self.provis_path)
-            self.my_pref[0] = round((1/dist) * 100, 3)
-        else:
-            self.my_pref[0] = 0'''
         if self.capacity > 0:
             self.provis_dest = meta
             provis_path_1 = self.bfs(self.position, meta)
@@ -175,8 +110,8 @@ class Agent(object):
             extra =  len(provis_path_2)
             path_residuo = self.bfs(self.position, self.destination)
             residual = len(path_residuo)
-            print("meta: ", meta, " dest: ", self.destination, " dest_2: ", self.destination_2)
-            print("dist: ", dist, " extra: ", extra, " residual: ", residual)
+            #print("meta: ", meta, " dest: ", self.destination, " dest_2: ", self.destination_2)
+            #print("dist: ", dist, " extra: ", extra, " residual: ", residual)
             
             if self.destination == (1,1):
                 self.my_pref[0] = round((1/dist) * 100, 3)
