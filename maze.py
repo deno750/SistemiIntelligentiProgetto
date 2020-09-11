@@ -15,17 +15,6 @@ class Maze(object):
     def __ne__(self, maze):
         return self.location != maze.location
 
-    '''def display(self):
-        """Print the maze, marking the current agent location."""
-        for r in range(len(self.grid)):
-            for c in range(len(self.grid[r])):
-                if (r, c) == self.location:
-                    print('*', end=" ")
-                else:
-                    print(self.grid[r][c], end=" ")
-            print("")
-        print(" ")'''
-
     def moves(self):
         """Return a list of possible moves given the current agent location."""
         # YOU FILL THIS IN
