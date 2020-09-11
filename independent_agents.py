@@ -6,7 +6,7 @@ from agent import Agent
 import sys
 
 test_mod = False
-sistem_mod = 3  # admissible values: 1, 2 and 3
+system_mod = 3  # admissible values: 1, 2 and 3
 AGENTS_COLOR = '\033[91m'
 METE_COLOR = '\033[34m'
 LANDFILL_COLOR = '\033[92m'
@@ -46,8 +46,8 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
         return agents
     next_meta = mete[0]
     
-    '''three different organzation sistems'''
-    if sistem_mod == 1:
+    '''three different organzation systems'''
+    if system_mod == 1:
         # This is used to show how bad perform a sistem unless the control of agents
         for i in range(len(agents)):
             if agents[i].__pos__() == (1,1):
@@ -58,9 +58,11 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
                 
                 path = agents[i].bfs(agents[i].__pos__(), agents[i].__dest__())  #l'agente prescelto calcola immediatamente il suo percorso
                 agents[i].path = path
-                time.sleep(1)
+                #time.sleep(1)
+                if test_mod:
+                    pause()
                 break   #solo uno accetta una certa meta
-    elif sistem_mod == 2:
+    elif system_mod == 2:
         # This is a basic control: always the first free agent keeps the new meta
         for i in range(len(agents)):
             if agents[i].__dest__() == (1,1) and agents[i].__cap__() > 0:
@@ -71,7 +73,9 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
                 
                 path = agents[i].bfs(agents[i].__pos__(), agents[i].__dest__())  #l'agente prescelto calcola immediatamente il suo percorso
                 agents[i].path = path
-                time.sleep(1)
+                #time.sleep(1)
+                if test_mod:
+                    pause()
                 break
     else:
         # The agents speak to each other in orther to decide which of them keep the new meta
@@ -110,7 +114,7 @@ def choose_new_meta(agents, mete):   #prende lista di agenti e coda di mete
 #supporto, solo per visualizzare il funzionamento lentamente
 def pause():
     while True:
-        n = str(input("press e to exit: "))
+        n = str(input("press \"e\" to exit: "))
         if n == "e":
             sys.exit()
         else:
